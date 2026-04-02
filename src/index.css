@@ -1,0 +1,234 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* YallaCoins Admin Portal Design System */
+
+@layer base {
+  :root {
+    --yalla-blue: #012D90;
+    --yalla-gold: #F0E68F;
+    --yalla-cyan: #00FFFF;
+    --yalla-navy-dark: #000A28;
+    --yalla-navy-light: #0A1432;
+    --yalla-success: #10B981;
+    --yalla-warning: #F59E0B;
+    --yalla-error: #EF4444;
+    --yalla-info: #3B82F6;
+  }
+
+  body {
+    @apply bg-gray-50 text-gray-900 font-poppins;
+  }
+
+  html[dir="rtl"] body {
+    @apply font-cairo;
+  }
+}
+
+@layer components {
+  /* Admin Buttons */
+  .btn-admin-primary {
+    @apply px-4 py-2 rounded-lg bg-[#012D90] text-white font-semibold hover:bg-[#0A1F5C] transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-admin-secondary {
+    @apply px-4 py-2 rounded-lg bg-gray-200 text-gray-900 font-semibold hover:bg-gray-300 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-admin-danger {
+    @apply px-4 py-2 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-admin-success {
+    @apply px-4 py-2 rounded-lg bg-green-600 text-white font-semibold hover:bg-green-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-admin-sm {
+    @apply px-3 py-1 text-sm rounded-md;
+  }
+
+  /* Admin Cards */
+  .card-admin {
+    @apply bg-white rounded-lg shadow-sm border border-gray-200 p-6;
+  }
+
+  .card-admin-hover {
+    @apply card-admin hover:shadow-md transition-shadow duration-200 cursor-pointer;
+  }
+
+  /* Admin Tables */
+  .table-admin {
+    @apply w-full border-collapse;
+  }
+
+  .table-admin thead {
+    @apply bg-gray-100 border-b border-gray-300;
+  }
+
+  .table-admin th {
+    @apply px-4 py-3 text-left text-sm font-semibold text-gray-700;
+  }
+
+  .table-admin td {
+    @apply px-4 py-3 text-sm text-gray-900 border-b border-gray-200;
+  }
+
+  .table-admin tbody tr:hover {
+    @apply bg-gray-50;
+  }
+
+  /* Status Badges */
+  .badge-status {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold;
+  }
+
+  .badge-submitted {
+    @apply badge-status bg-blue-100 text-blue-800;
+  }
+
+  .badge-under-review {
+    @apply badge-status bg-yellow-100 text-yellow-800;
+  }
+
+  .badge-approved {
+    @apply badge-status bg-green-100 text-green-800;
+  }
+
+  .badge-needs-correction {
+    @apply badge-status bg-orange-100 text-orange-800;
+  }
+
+  .badge-paid {
+    @apply badge-status bg-emerald-100 text-emerald-800;
+  }
+
+  .badge-rejected {
+    @apply badge-status bg-red-100 text-red-800;
+  }
+
+  /* Input Fields */
+  .input-admin {
+    @apply w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#012D90] focus:border-transparent;
+  }
+
+  .select-admin {
+    @apply input-admin appearance-none bg-white cursor-pointer;
+  }
+
+  .textarea-admin {
+    @apply input-admin resize-none;
+  }
+
+  /* Layout */
+  .admin-container {
+    @apply max-w-7xl mx-auto px-4 py-8;
+  }
+
+  .admin-grid {
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6;
+  }
+
+  .admin-grid-2 {
+    @apply grid grid-cols-1 md:grid-cols-2 gap-6;
+  }
+
+  /* Sidebar */
+  .sidebar-admin {
+    @apply fixed left-0 top-0 h-screen w-64 bg-[#012D90] text-white overflow-y-auto;
+  }
+
+  .sidebar-item {
+    @apply px-6 py-3 hover:bg-[#0A1F5C] transition-colors duration-200 cursor-pointer;
+  }
+
+  .sidebar-item-active {
+    @apply sidebar-item bg-[#0A1F5C] border-l-4 border-[#F0E68F];
+  }
+
+  /* Main Content */
+  .admin-main {
+    @apply ml-64 min-h-screen bg-gray-50;
+  }
+
+  /* Topbar */
+  .topbar-admin {
+    @apply bg-white border-b border-gray-200 px-8 py-4 flex items-center justify-between;
+  }
+
+  /* KPI Cards */
+  .kpi-card {
+    @apply card-admin;
+  }
+
+  .kpi-value {
+    @apply text-3xl font-bold text-[#012D90] mt-2;
+  }
+
+  .kpi-label {
+    @apply text-sm text-gray-600 mt-1;
+  }
+
+  .kpi-change {
+    @apply text-xs mt-2;
+  }
+
+  .kpi-change-positive {
+    @apply kpi-change text-green-600;
+  }
+
+  .kpi-change-negative {
+    @apply kpi-change text-red-600;
+  }
+
+  /* Animations */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideInRight {
+    from {
+      transform: translateX(20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+  }
+
+  .animate-slide-in-right {
+    animation: slideInRight 0.3s ease-in-out;
+  }
+}
+
+/* RTL Support */
+html[dir="rtl"] {
+  direction: rtl;
+  text-align: right;
+}
+
+html[dir="rtl"] .sidebar-item-active {
+  @apply border-l-0 border-r-4;
+}
+
+html[dir="rtl"] .admin-main {
+  @apply ml-0 mr-64;
+}
+
+html[dir="rtl"] .table-admin th {
+  @apply text-right;
+}
+
+html[dir="rtl"] .table-admin td {
+  @apply text-right;
+}
