@@ -1,1 +1,213 @@
-import React, { useState } from 'react';\nimport { Save, X } from 'lucide-react';\n\nexport const Settings: React.FC = () => {\n  const [settings, setSettings] = useState({\n    requestIdFormat: 'REQ-YYYY-NNNN',\n    defaultTimingText: '24-48 hours',\n    minWithdrawalAmount: 100,\n    maxWithdrawalAmount: 50000,\n    notificationEmail: 'admin@yallacoins.com',\n    enableAutoApproval: false,\n    autoApprovalThreshold: 1000,\n    requireScreenshot: true,\n    maintenanceMode: false,\n    maintenanceMessage: 'System is under maintenance. Please try again later.',\n  });\n\n  const [isEditing, setIsEditing] = useState(false);\n  const [editValues, setEditValues] = useState(settings);\n\n  const handleEdit = () => {\n    setIsEditing(true);\n    setEditValues(settings);\n  };\n\n  const handleSave = () => {\n    setSettings(editValues);\n    setIsEditing(false);\n  };\n\n  const handleCancel = () => {\n    setIsEditing(false);\n    setEditValues(settings);\n  };\n\n  const SettingSection = ({ title, description, children }: any) => (\n    <div className=\"card-admin\">\n      <h3 className=\"text-lg font-bold text-gray-900 mb-1\">{title}</h3>\n      <p className=\"text-sm text-gray-600 mb-4\">{description}</p>\n      {children}\n    </div>\n  );\n\n  const SettingField = ({ label, value, onChange, type = 'text' }: any) => (\n    <div className=\"mb-4\">\n      <label className=\"block text-sm font-semibold text-gray-700 mb-2\">{label}</label>\n      {type === 'checkbox' ? (\n        <input\n          type=\"checkbox\"\n          checked={value}\n          onChange={(e) => onChange(e.target.checked)}\n          className=\"w-4 h-4\"\n        />\n      ) : type === 'textarea' ? (\n        <textarea\n          value={value}\n          onChange={(e) => onChange(e.target.value)}\n          className=\"textarea-admin\"\n        />\n      ) : (\n        <input\n          type={type}\n          value={value}\n          onChange={(e) => onChange(type === 'number' ? parseFloat(e.target.value) : e.target.value)}\n          className=\"input-admin\"\n        />\n      )}\n    </div>\n  );\n\n  return (\n    <div className=\"p-8\">\n      {/* Header */}\n      <div className=\"mb-8 flex items-center justify-between\">\n        <div>\n          <h2 className=\"text-3xl font-bold text-gray-900\">Settings</h2>\n          <p className=\"text-gray-600 mt-1\">Configure system preferences and rules</p>\n        </div>\n        {!isEditing ? (\n          <button\n            onClick={handleEdit}\n            className=\"btn-admin-primary btn-admin-sm\"\n          >\n            Edit Settings\n          </button>\n        ) : (\n          <div className=\"flex gap-2\">\n            <button\n              onClick={handleSave}\n              className=\"btn-admin-primary btn-admin-sm flex items-center gap-2\"\n            >\n              <Save size={16} />\n              Save\n            </button>\n            <button\n              onClick={handleCancel}\n              className=\"btn-admin-secondary btn-admin-sm flex items-center gap-2\"\n            >\n              <X size={16} />\n              Cancel\n            </button>\n          </div>\n        )}\n      </div>\n\n      <div className=\"space-y-6\">\n        {/* Request Settings */}\n        <SettingSection\n          title=\"Request Settings\"\n          description=\"Configure withdrawal request behavior\"\n        >\n          <div className=\"space-y-4\">\n            {isEditing ? (\n              <>\n                <SettingField\n                  label=\"Request ID Format\"\n                  value={editValues.requestIdFormat}\n                  onChange={(val: string) => setEditValues({ ...editValues, requestIdFormat: val })}\n                />\n                <SettingField\n                  label=\"Default Timing Text\"\n                  value={editValues.defaultTimingText}\n                  onChange={(val: string) => setEditValues({ ...editValues, defaultTimingText: val })}\n                />\n                <SettingField\n                  label=\"Minimum Withdrawal Amount ($)\"\n                  type=\"number\"\n                  value={editValues.minWithdrawalAmount}\n                  onChange={(val: number) => setEditValues({ ...editValues, minWithdrawalAmount: val })}\n                />\n                <SettingField\n                  label=\"Maximum Withdrawal Amount ($)\"\n                  type=\"number\"\n                  value={editValues.maxWithdrawalAmount}\n                  onChange={(val: number) => setEditValues({ ...editValues, maxWithdrawalAmount: val })}\n                />\n                <div className=\"flex items-center gap-2\">\n                  <input\n                    type=\"checkbox\"\n                    checked={editValues.requireScreenshot}\n                    onChange={(e) => setEditValues({ ...editValues, requireScreenshot: e.target.checked })}\n                    className=\"w-4 h-4\"\n                  />\n                  <label className=\"text-sm font-semibold text-gray-700\">Require Screenshot Upload</label>\n                </div>\n              </>\n            ) : (\n              <div className=\"space-y-2 text-sm\">\n                <p><strong>Request ID Format:</strong> {settings.requestIdFormat}</p>\n                <p><strong>Default Timing:</strong> {settings.defaultTimingText}</p>\n                <p><strong>Min Withdrawal:</strong> ${settings.minWithdrawalAmount}</p>\n                <p><strong>Max Withdrawal:</strong> ${settings.maxWithdrawalAmount}</p>\n                <p><strong>Require Screenshot:</strong> {settings.requireScreenshot ? 'Yes' : 'No'}</p>\n              </div>\n            )}\n          </div>\n        </SettingSection>\n\n        {/* Notification Settings */}\n        <SettingSection\n          title=\"Notification Settings\"\n          description=\"Configure email notifications\"\n        >\n          <div className=\"space-y-4\">\n            {isEditing ? (\n              <SettingField\n                label=\"Notification Email\"\n                type=\"email\"\n                value={editValues.notificationEmail}\n                onChange={(val: string) => setEditValues({ ...editValues, notificationEmail: val })}\n              />\n            ) : (\n              <p className=\"text-sm\"><strong>Email:</strong> {settings.notificationEmail}</p>\n            )}\n          </div>\n        </SettingSection>\n\n        {/* Auto-Approval Settings */}\n        <SettingSection\n          title=\"Auto-Approval Settings\"\n          description=\"Configure automatic request approval\"\n        >\n          <div className=\"space-y-4\">\n            {isEditing ? (\n              <>\n                <div className=\"flex items-center gap-2\">\n                  <input\n                    type=\"checkbox\"\n                    checked={editValues.enableAutoApproval}\n                    onChange={(e) => setEditValues({ ...editValues, enableAutoApproval: e.target.checked })}\n                    className=\"w-4 h-4\"\n                  />\n                  <label className=\"text-sm font-semibold text-gray-700\">Enable Auto-Approval</label>\n                </div>\n                {editValues.enableAutoApproval && (\n                  <SettingField\n                    label=\"Auto-Approval Threshold ($)\"\n                    type=\"number\"\n                    value={editValues.autoApprovalThreshold}\n                    onChange={(val: number) => setEditValues({ ...editValues, autoApprovalThreshold: val })}\n                  />\n                )}\n              </>\n            ) : (\n              <div className=\"space-y-2 text-sm\">\n                <p><strong>Enabled:</strong> {settings.enableAutoApproval ? 'Yes' : 'No'}</p>\n                {settings.enableAutoApproval && (\n                  <p><strong>Threshold:</strong> ${settings.autoApprovalThreshold}</p>\n                )}\n              </div>\n            )}\n          </div>\n        </SettingSection>\n\n        {/* Maintenance Mode */}\n        <SettingSection\n          title=\"Maintenance Mode\"\n          description=\"Temporarily disable the withdrawal system\"\n        >\n          <div className=\"space-y-4\">\n            {isEditing ? (\n              <>\n                <div className=\"flex items-center gap-2\">\n                  <input\n                    type=\"checkbox\"\n                    checked={editValues.maintenanceMode}\n                    onChange={(e) => setEditValues({ ...editValues, maintenanceMode: e.target.checked })}\n                    className=\"w-4 h-4\"\n                  />\n                  <label className=\"text-sm font-semibold text-gray-700\">Enable Maintenance Mode</label>\n                </div>\n                {editValues.maintenanceMode && (\n                  <SettingField\n                    label=\"Maintenance Message\"\n                    type=\"textarea\"\n                    value={editValues.maintenanceMessage}\n                    onChange={(val: string) => setEditValues({ ...editValues, maintenanceMessage: val })}\n                  />\n                )}\n              </>\n            ) : (\n              <div className=\"space-y-2 text-sm\">\n                <p><strong>Status:</strong> {settings.maintenanceMode ? 'Enabled' : 'Disabled'}</p>\n                {settings.maintenanceMode && (\n                  <p><strong>Message:</strong> {settings.maintenanceMessage}</p>\n                )}\n              </div>\n            )}\n          </div>\n        </SettingSection>\n\n        {/* System Info */}\n        <SettingSection\n          title=\"System Information\"\n          description=\"View system details\"\n        >\n          <div className=\"space-y-2 text-sm\">\n            <p><strong>Version:</strong> 1.0.0</p>\n            <p><strong>Last Updated:</strong> {new Date().toLocaleString()}</p>\n            <p><strong>Database:</strong> Connected</p>\n            <p><strong>API Status:</strong> Operational</p>\n          </div>\n        </SettingSection>\n      </div>\n    </div>\n  );\n};\n
+import React, { useState } from 'react';
+import { AlertCircle, Save, X } from 'lucide-react';
+
+export const Settings: React.FC = () => {
+  const [settings, setSettings] = useState({
+    requestIdFormat: 'REQ-YYYY-NNNN',
+    defaultTimingText: '24-48 hours',
+    minWithdrawalAmount: 100,
+    maxWithdrawalAmount: 50000,
+    notificationEmail: 'admin@yallacoins.com',
+    enableAutoApproval: false,
+    autoApprovalThreshold: 1000,
+    requireScreenshot: true,
+    maintenanceMode: false,
+    maintenanceMessage: 'System is under maintenance. Please try again later.',
+  });
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValues, setEditValues] = useState(settings);
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
+
+  const handleEdit = () => {
+    setIsEditing(true);
+    setEditValues(settings);
+  };
+
+  const handleSave = () => {
+    setSettings(editValues);
+    setSaveMessage('Settings saved successfully');
+    setIsEditing(false);
+    setTimeout(() => setSaveMessage(null), 3000);
+  };
+
+  const handleCancel = () => {
+    setIsEditing(false);
+    setEditValues(settings);
+  };
+
+  const SettingSection = ({ title, description, children }: any) => (
+    <div className="card-admin">
+      <h3 className="text-lg font-bold text-gray-900 mb-1">{title}</h3>
+      <p className="text-sm text-gray-600 mb-4">{description}</p>
+      {children}
+    </div>
+  );
+
+  const SettingField = ({ label, value, onChange, type = 'text' }: any) => (
+    <div className="mb-4">
+      <label className="block text-sm font-semibold text-gray-700 mb-2">{label}</label>
+      {type === 'checkbox' ? (
+        <input
+          type="checkbox"
+          checked={value}
+          onChange={(e) => onChange(e.target.checked)}
+          disabled={!isEditing}
+          className="w-4 h-4"
+        />
+      ) : type === 'textarea' ? (
+        <textarea
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          disabled={!isEditing}
+          className="input-admin"
+          rows={4}
+        />
+      ) : (
+        <input
+          type={type}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          disabled={!isEditing}
+          className="input-admin"
+        />
+      )}
+    </div>
+  );
+
+  return (
+    <div className="p-8">
+      {/* Header */}
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-bold text-gray-900">System Settings</h2>
+          <p className="text-gray-600 mt-1">Configure system-wide settings and preferences</p>
+        </div>
+        <div className="flex gap-2">
+          {isEditing ? (
+            <>
+              <button
+                onClick={handleSave}
+                className="btn-admin-primary btn-admin-sm flex items-center gap-2"
+              >
+                <Save size={16} />
+                Save
+              </button>
+              <button
+                onClick={handleCancel}
+                className="btn-admin-secondary btn-admin-sm flex items-center gap-2"
+              >
+                <X size={16} />
+                Cancel
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={handleEdit}
+              className="btn-admin-primary btn-admin-sm"
+            >
+              Edit Settings
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Success Message */}
+      {saveMessage && (
+        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-start gap-3">
+          <AlertCircle size={20} className="text-green-600 flex-shrink-0 mt-0.5" />
+          <p className="text-sm text-green-700">{saveMessage}</p>
+        </div>
+      )}
+
+      {/* Settings Sections */}
+      <div className="space-y-6">
+        {/* Withdrawal Settings */}
+        <SettingSection
+          title="Withdrawal Settings"
+          description="Configure withdrawal request parameters"
+        >
+          <SettingField
+            label="Request ID Format"
+            value={editValues.requestIdFormat}
+            onChange={(val: string) => setEditValues({ ...editValues, requestIdFormat: val })}
+          />
+          <SettingField
+            label="Default Processing Time"
+            value={editValues.defaultTimingText}
+            onChange={(val: string) => setEditValues({ ...editValues, defaultTimingText: val })}
+          />
+          <SettingField
+            label="Minimum Withdrawal Amount ($)"
+            value={editValues.minWithdrawalAmount}
+            onChange={(val: string) => setEditValues({ ...editValues, minWithdrawalAmount: parseInt(val) })}
+            type="number"
+          />
+          <SettingField
+            label="Maximum Withdrawal Amount ($)"
+            value={editValues.maxWithdrawalAmount}
+            onChange={(val: string) => setEditValues({ ...editValues, maxWithdrawalAmount: parseInt(val) })}
+            type="number"
+          />
+        </SettingSection>
+
+        {/* Approval Settings */}
+        <SettingSection
+          title="Approval Settings"
+          description="Configure automatic approval rules"
+        >
+          <SettingField
+            label="Enable Auto-Approval"
+            value={editValues.enableAutoApproval}
+            onChange={(val: boolean) => setEditValues({ ...editValues, enableAutoApproval: val })}
+            type="checkbox"
+          />
+          <SettingField
+            label="Auto-Approval Threshold ($)"
+            value={editValues.autoApprovalThreshold}
+            onChange={(val: string) => setEditValues({ ...editValues, autoApprovalThreshold: parseInt(val) })}
+            type="number"
+          />
+          <SettingField
+            label="Require Screenshot Proof"
+            value={editValues.requireScreenshot}
+            onChange={(val: boolean) => setEditValues({ ...editValues, requireScreenshot: val })}
+            type="checkbox"
+          />
+        </SettingSection>
+
+        {/* Notification Settings */}
+        <SettingSection
+          title="Notification Settings"
+          description="Configure notification preferences"
+        >
+          <SettingField
+            label="Notification Email"
+            value={editValues.notificationEmail}
+            onChange={(val: string) => setEditValues({ ...editValues, notificationEmail: val })}
+            type="email"
+          />
+        </SettingSection>
+
+        {/* Maintenance Settings */}
+        <SettingSection
+          title="Maintenance Settings"
+          description="Configure system maintenance mode"
+        >
+          <SettingField
+            label="Enable Maintenance Mode"
+            value={editValues.maintenanceMode}
+            onChange={(val: boolean) => setEditValues({ ...editValues, maintenanceMode: val })}
+            type="checkbox"
+          />
+          <SettingField
+            label="Maintenance Message"
+            value={editValues.maintenanceMessage}
+            onChange={(val: string) => setEditValues({ ...editValues, maintenanceMessage: val })}
+            type="textarea"
+          />
+        </SettingSection>
+      </div>
+    </div>
+  );
+};

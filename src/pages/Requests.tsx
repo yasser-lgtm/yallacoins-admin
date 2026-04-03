@@ -1,11 +1,17 @@
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useLocation } from 'wouter';
-import { mockWithdrawalRequests } from '../mockData';
+import { useAuth } from '../contexts/AuthContext';
+import { getWithdrawalRequests } from '../services/api';
 import { WithdrawalRequest } from '../types';
-import { Search, Filter, ChevronRight, Eye, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { Search, Filter, ChevronRight, Eye, CheckCircle, XCircle, AlertCircle, Loader } from 'lucide-react';
 
 export const Requests: React.FC = () => {
   const [, setLocation] = useLocation();
+  const { token } = useAuth();
+  const [requests, setRequests] = useState<WithdrawalRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [appFilter, setAppFilter] = useState('');
@@ -13,8 +19,33 @@ export const Requests: React.FC = () => {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
 
+  // Fetch requests from backend
+  useEffect(() => {
+    const fetchRequests = async () => {
+      if (!token) {
+        setError('Not authenticated');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const data = await getWithdrawalRequests(token);
+        setRequests(data);
+        setError(null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load requests');
+        setRequests([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRequests();
+  }, [token]);
+
   const filteredRequests = useMemo(() => {
-    return mockWithdrawalRequests.filter(req => {
+    return requests.filter(req => {
       const matchesSearch = 
         req.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
         req.accountId.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -33,11 +64,11 @@ export const Requests: React.FC = () => {
 
       return matchesSearch && matchesStatus && matchesApp && matchesCountry && matchesDate;
     });
-  }, [searchTerm, statusFilter, appFilter, countryFilter, dateFrom, dateTo]);
+  }, [requests, searchTerm, statusFilter, appFilter, countryFilter, dateFrom, dateTo]);
 
   const getStatusBadge = (status: string) => {
     const badges: Record<string, { bg: string; text: string; icon: React.ReactNode }> = {
-      submitted: { bg: 'bg-blue-100', text: 'text-blue-800', icon: <AlertCircle size={14} /> },
+      pending: { bg: 'bg-blue-100', text: 'text-blue-800', icon: <AlertCircle size={14} /> },
       under_review: { bg: 'bg-yellow-100', text: 'text-yellow-800', icon: <AlertCircle size={14} /> },
       approved: { bg: 'bg-green-100', text: 'text-green-800', icon: <CheckCircle size={14} /> },
       needs_correction: { bg: 'bg-orange-100', text: 'text-orange-800', icon: <AlertCircle size={14} /> },
@@ -45,7 +76,7 @@ export const Requests: React.FC = () => {
       rejected: { bg: 'bg-red-100', text: 'text-red-800', icon: <XCircle size={14} /> },
     };
 
-    const badge = badges[status] || badges.submitted;
+    const badge = badges[status] || badges.pending;
     return (
       <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold ${badge.bg} ${badge.text}`}>
         {badge.icon}
@@ -67,12 +98,34 @@ export const Requests: React.FC = () => {
     );
   };
 
+  if (loading) {
+    return (
+      <div className="p-8 flex items-center justify-center h-screen">
+        <div className="text-center">
+          <Loader className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
+          <p className="text-gray-600">Loading requests...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-8">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-800">
+          <p className="font-semibold">Error loading requests</p>
+          <p className="text-sm mt-1">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-8">
       {/* Header */}
       <div className="mb-8">
         <h2 className="text-3xl font-bold text-gray-900">Withdrawal Requests</h2>
-        <p className="text-gray-600 mt-1">Review and manage creator withdrawal requests</p>
+        <p className="text-gray-600 mt-1">Review and manage creator withdrawal requests ({filteredRequests.length})</p>
       </div>
 
       {/* Filters */}
@@ -99,10 +152,10 @@ export const Requests: React.FC = () => {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="select-admin"
+            className="input-admin"
           >
-            <option value="">All Status</option>
-            <option value="submitted">Submitted</option>
+            <option value="">All Statuses</option>
+            <option value="pending">Pending</option>
             <option value="under_review">Under Review</option>
             <option value="approved">Approved</option>
             <option value="needs_correction">Needs Correction</option>
@@ -114,110 +167,87 @@ export const Requests: React.FC = () => {
           <select
             value={appFilter}
             onChange={(e) => setAppFilter(e.target.value)}
-            className="select-admin"
+            className="input-admin"
           >
             <option value="">All Apps</option>
-            <option value="bigo">Bigo Live</option>
+            <option value="bigo">Bigo</option>
             <option value="kiti">Kiti</option>
-            <option value="xena">Xena Live</option>
+            <option value="xena">Xena</option>
           </select>
 
           {/* Country Filter */}
           <select
             value={countryFilter}
             onChange={(e) => setCountryFilter(e.target.value)}
-            className="select-admin"
+            className="input-admin"
           >
             <option value="">All Countries</option>
-            <option value="Egypt">Egypt</option>
-            <option value="UAE">UAE</option>
+            <option value="EG">Egypt</option>
+            <option value="AE">UAE</option>
+            <option value="SA">Saudi Arabia</option>
+            <option value="KW">Kuwait</option>
           </select>
 
-          {/* Date From */}
-          <input
-            type="date"
-            value={dateFrom}
-            onChange={(e) => setDateFrom(e.target.value)}
-            className="input-admin"
-          />
-        </div>
-
-        <div className="mt-4 flex gap-2">
-          <button
-            onClick={() => {
-              setSearchTerm('');
-              setStatusFilter('');
-              setAppFilter('');
-              setCountryFilter('');
-              setDateFrom('');
-              setDateTo('');
-            }}
-            className="btn-admin-secondary btn-admin-sm"
-          >
-            Clear Filters
-          </button>
-          <span className="text-sm text-gray-600 self-center">
-            {filteredRequests.length} request{filteredRequests.length !== 1 ? 's' : ''} found
-          </span>
+          {/* Date Range */}
+          <div className="flex gap-2">
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              className="input-admin flex-1"
+              placeholder="From"
+            />
+            <input
+              type="date"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+              className="input-admin flex-1"
+              placeholder="To"
+            />
+          </div>
         </div>
       </div>
 
       {/* Requests Table */}
       <div className="card-admin overflow-x-auto">
         {filteredRequests.length === 0 ? (
-          <div className="text-center py-12">
-            <AlertCircle size={48} className="mx-auto text-gray-400 mb-4" />
-            <p className="text-gray-600 font-medium">No requests found</p>
-            <p className="text-sm text-gray-500">Try adjusting your filters</p>
+          <div className="p-8 text-center text-gray-600">
+            <p>No requests found matching your filters</p>
           </div>
         ) : (
-          <table className="table-admin">
-            <thead>
+          <table className="w-full">
+            <thead className="border-b border-gray-200">
               <tr>
-                <th>Request ID</th>
-                <th>Date</th>
-                <th>App</th>
-                <th>Account ID</th>
-                <th>Phone</th>
-                <th>Amount</th>
-                <th>USD</th>
-                <th>Payout</th>
-                <th>Country</th>
-                <th>Method</th>
-                <th>Status</th>
-                <th>Assigned</th>
-                <th>Action</th>
+                <th className="text-left py-3 px-4 font-semibold text-gray-700">Request ID</th>
+                <th className="text-left py-3 px-4 font-semibold text-gray-700">Date</th>
+                <th className="text-left py-3 px-4 font-semibold text-gray-700">App</th>
+                <th className="text-left py-3 px-4 font-semibold text-gray-700">Account</th>
+                <th className="text-left py-3 px-4 font-semibold text-gray-700">Amount</th>
+                <th className="text-left py-3 px-4 font-semibold text-gray-700">Country</th>
+                <th className="text-left py-3 px-4 font-semibold text-gray-700">Status</th>
+                <th className="text-left py-3 px-4 font-semibold text-gray-700">Action</th>
               </tr>
             </thead>
             <tbody>
               {filteredRequests.map((req) => (
-                <tr key={req.id}>
-                  <td className="font-mono font-semibold text-[#012D90]">{req.id}</td>
-                  <td className="text-xs text-gray-500">
+                <tr key={req.id} className="border-b border-gray-100 hover:bg-gray-50">
+                  <td className="py-3 px-4 font-mono text-sm text-gray-900">{req.id.substring(0, 8)}...</td>
+                  <td className="py-3 px-4 text-sm text-gray-600">
                     {new Date(req.submittedAt).toLocaleDateString()}
                   </td>
-                  <td>{getAppBadge(req.app)}</td>
-                  <td className="font-mono text-sm">{req.accountId}</td>
-                  <td className="font-mono text-sm">{req.phone}</td>
-                  <td className="font-semibold">
-                    {req.amountSubmitted.toLocaleString()} {req.currency}
-                  </td>
-                  <td className="font-semibold text-green-700">${req.estimatedUSD}</td>
-                  <td className="font-semibold text-[#012D90]">
-                    {req.estimatedPayout} {req.payoutCurrency}
-                  </td>
-                  <td>{req.country}</td>
-                  <td className="text-sm">{req.payoutMethod}</td>
-                  <td>{getStatusBadge(req.status)}</td>
-                  <td className="text-sm text-gray-600">{req.assignedTo ? 'Assigned' : '—'}</td>
-                  <td>
+                  <td className="py-3 px-4">{getAppBadge(req.app)}</td>
+                  <td className="py-3 px-4 text-sm text-gray-900">{req.accountId}</td>
+                  <td className="py-3 px-4 text-sm font-semibold text-gray-900">${req.amount}</td>
+                  <td className="py-3 px-4 text-sm text-gray-600">{req.country}</td>
+                  <td className="py-3 px-4">{getStatusBadge(req.status)}</td>
+                  <td className="py-3 px-4">
                     <button
                       onClick={() => setLocation(`/requests/${req.id}`)}
-                      className="inline-flex items-center gap-1 text-[#012D90] hover:text-[#0A1F5C] font-semibold transition-colors"
+                      className="inline-flex items-center gap-1 px-3 py-1 rounded bg-blue-50 text-blue-600 hover:bg-blue-100 transition text-sm font-medium"
                     >
-                      <Eye size={16} />
+                      <Eye size={14} />
                       View
-                      <ChevronRight size={16} />
+                      <ChevronRight size={14} />
                     </button>
                   </td>
                 </tr>

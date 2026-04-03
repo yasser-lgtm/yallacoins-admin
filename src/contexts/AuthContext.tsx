@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { AdminUser, AuthState } from '../types';
-import { mockUsers } from '../mockData';
+import { adminLogin } from '../services/api';
 
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<void>;
@@ -29,19 +29,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = async (email: string, password: string) => {
-    // Mock authentication - in production, this would call a real API
-    const user = mockUsers.find(u => u.email === email);
-    
-    if (user && password === 'demo123') {
+    try {
+      // Call real backend authentication
+      const response = await adminLogin(email, password);
+      
       const newAuthState: AuthState = {
         isAuthenticated: true,
-        user,
-        token: `token_${user.id}`,
+        user: {
+          id: response.user.id,
+          email: response.user.email,
+          name: response.user.name,
+          role: response.user.role,
+        },
+        token: response.access_token,
       };
+      
       setAuthState(newAuthState);
       localStorage.setItem('adminAuth', JSON.stringify(newAuthState));
-    } else {
-      throw new Error('Invalid email or password');
+    } catch (error) {
+      throw error;
     }
   };
 

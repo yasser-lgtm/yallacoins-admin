@@ -1,1 +1,124 @@
-import React, { useState } from 'react';\nimport { mockApps } from '../mockData';\nimport { App } from '../types';\nimport { Edit2, Save, X } from 'lucide-react';\n\nexport const Apps: React.FC = () => {\n  const [apps, setApps] = useState<App[]>(mockApps);\n  const [editingId, setEditingId] = useState<string | null>(null);\n  const [editValues, setEditValues] = useState<Partial<App>>({});\n\n  const handleEdit = (app: App) => {\n    setEditingId(app.id);\n    setEditValues(app);\n  };\n\n  const handleSave = () => {\n    if (editingId) {\n      setApps(apps.map(a => a.id === editingId ? { ...a, ...editValues } : a));\n      setEditingId(null);\n      setEditValues({});\n    }\n  };\n\n  const handleCancel = () => {\n    setEditingId(null);\n    setEditValues({});\n  };\n\n  const AppCard = ({ app }: { app: App }) => {\n    const isEditing = editingId === app.id;\n\n    return (\n      <div className=\"card-admin\">\n        <div className=\"flex items-start justify-between mb-4\">\n          <div>\n            <h3 className=\"text-lg font-bold text-gray-900 capitalize\">{app.name}</h3>\n            <p className=\"text-sm text-gray-600\">Application Management</p>\n          </div>\n          <div className=\"flex items-center gap-2\">\n            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${\n              app.status === 'active' ? 'bg-green-100 text-green-800' :\n              app.status === 'limited' ? 'bg-yellow-100 text-yellow-800' :\n              'bg-red-100 text-red-800'\n            }`}>\n              {app.status}\n            </span>\n            {!isEditing && (\n              <button\n                onClick={() => handleEdit(app)}\n                className=\"p-2 hover:bg-gray-100 rounded-lg transition-colors\"\n              >\n                <Edit2 size={16} className=\"text-gray-600\" />\n              </button>\n            )}\n          </div>\n        </div>\n\n        {isEditing ? (\n          <div className=\"space-y-4 bg-gray-50 p-4 rounded-lg\">\n            <div>\n              <label className=\"block text-sm font-semibold text-gray-700 mb-1\">Status</label>\n              <select\n                value={editValues.status || 'active'}\n                onChange={(e) => setEditValues({ ...editValues, status: e.target.value as any })}\n                className=\"select-admin\"\n              >\n                <option value=\"active\">Active</option>\n                <option value=\"limited\">Limited</option>\n                <option value=\"disabled\">Disabled</option>\n              </select>\n            </div>\n\n            <div>\n              <label className=\"block text-sm font-semibold text-gray-700 mb-1\">Conversion Unit Label</label>\n              <input\n                type=\"text\"\n                value={editValues.conversionUnitLabel || ''}\n                onChange={(e) => setEditValues({ ...editValues, conversionUnitLabel: e.target.value })}\n                placeholder=\"e.g., Beans, Points, Coins\"\n                className=\"input-admin\"\n              />\n            </div>\n\n            <div>\n              <label className=\"block text-sm font-semibold text-gray-700 mb-1\">ID Helper Text</label>\n              <textarea\n                value={editValues.idHelperText || ''}\n                onChange={(e) => setEditValues({ ...editValues, idHelperText: e.target.value })}\n                placeholder=\"Instructions for finding account ID\"\n                className=\"textarea-admin h-20\"\n              />\n            </div>\n\n            <div>\n              <label className=\"block text-sm font-semibold text-gray-700 mb-1\">Upload Instructions</label>\n              <textarea\n                value={editValues.uploadInstructions || ''}\n                onChange={(e) => setEditValues({ ...editValues, uploadInstructions: e.target.value })}\n                placeholder=\"Instructions for uploading proof\"\n                className=\"textarea-admin h-20\"\n              />\n            </div>\n\n            <div>\n              <label className=\"block text-sm font-semibold text-gray-700 mb-1\">Public Messages</label>\n              <textarea\n                value={editValues.publicMessages || ''}\n                onChange={(e) => setEditValues({ ...editValues, publicMessages: e.target.value })}\n                placeholder=\"Messages shown to creators\"\n                className=\"textarea-admin h-20\"\n              />\n            </div>\n\n            <div>\n              <label className=\"block text-sm font-semibold text-gray-700 mb-1\">Internal Rules</label>\n              <textarea\n                value={editValues.internalRules || ''}\n                onChange={(e) => setEditValues({ ...editValues, internalRules: e.target.value })}\n                placeholder=\"Internal processing rules\"\n                className=\"textarea-admin h-20\"\n              />\n            </div>\n\n            <div className=\"flex gap-2\">\n              <button\n                onClick={handleSave}\n                className=\"flex-1 btn-admin-primary btn-admin-sm flex items-center justify-center gap-2\"\n              >\n                <Save size={16} />\n                Save Changes\n              </button>\n              <button\n                onClick={handleCancel}\n                className=\"flex-1 btn-admin-secondary btn-admin-sm flex items-center justify-center gap-2\"\n              >\n                <X size={16} />\n                Cancel\n              </button>\n            </div>\n          </div>\n        ) : (\n          <div className=\"space-y-4\">\n            <div className=\"bg-gray-50 p-3 rounded\">\n              <p className=\"text-xs text-gray-600 mb-1\">Unit Label</p>\n              <p className=\"font-semibold\">{app.conversionUnitLabel}</p>\n            </div>\n\n            <div className=\"bg-gray-50 p-3 rounded\">\n              <p className=\"text-xs text-gray-600 mb-1\">ID Helper Text</p>\n              <p className=\"text-sm\">{app.idHelperText}</p>\n            </div>\n\n            <div className=\"bg-gray-50 p-3 rounded\">\n              <p className=\"text-xs text-gray-600 mb-1\">Upload Instructions</p>\n              <p className=\"text-sm\">{app.uploadInstructions}</p>\n            </div>\n\n            <div className=\"bg-gray-50 p-3 rounded\">\n              <p className=\"text-xs text-gray-600 mb-1\">Public Messages</p>\n              <p className=\"text-sm\">{app.publicMessages}</p>\n            </div>\n\n            <div className=\"bg-gray-50 p-3 rounded\">\n              <p className=\"text-xs text-gray-600 mb-1\">Internal Rules</p>\n              <p className=\"text-sm\">{app.internalRules}</p>\n            </div>\n          </div>\n        )}\n      </div>\n    );\n  };\n\n  return (\n    <div className=\"p-8\">\n      {/* Header */}\n      <div className=\"mb-8\">\n        <h2 className=\"text-3xl font-bold text-gray-900\">App Management</h2>\n        <p className=\"text-gray-600 mt-1\">Control app availability and settings</p>\n      </div>\n\n      {/* Apps Grid */}\n      <div className=\"grid grid-cols-1 lg:grid-cols-2 gap-6\">\n        {apps.map(app => (\n          <AppCard key={app.id} app={app} />\n        ))}\n      </div>\n    </div>\n  );\n};\n
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import { App } from '../types';
+import { getAppRates } from '../services/api';
+import { AlertCircle, Loader } from 'lucide-react';
+
+export const Apps: React.FC = () => {
+  const { token } = useAuth();
+  const [apps, setApps] = useState<App[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (token) {
+      loadApps();
+    }
+  }, [token]);
+
+  const loadApps = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const rates = await getAppRates(token!);
+      // Convert app rates to app format for display
+      const appData: App[] = rates.map(rate => ({
+        id: rate.appId,
+        name: rate.appName,
+        status: 'active',
+        conversionUnitLabel: rate.appName === 'Bigo' ? 'Beans' : rate.appName === 'Kiti' ? 'Points' : 'Coins',
+        minWithdrawal: rate.minWithdrawal,
+        rate: rate.rate,
+        fee: rate.fee,
+      }));
+      setApps(appData);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load apps');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="p-8">
+        <div className="flex items-center justify-center py-12">
+          <Loader size={40} className="text-[#012D90] animate-spin" />
+        </div>
+      </div>
+    );
+  }
+
+  const AppCard = ({ app }: { app: App }) => (
+    <div className="card-admin">
+      <div className="flex items-start justify-between mb-4">
+        <div>
+          <h3 className="text-lg font-bold text-gray-900 capitalize">{app.name}</h3>
+          <p className="text-sm text-gray-600">Application Details</p>
+        </div>
+        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+          app.status === 'active' ? 'bg-green-100 text-green-800' :
+          app.status === 'limited' ? 'bg-yellow-100 text-yellow-800' :
+          'bg-red-100 text-red-800'
+        }`}>
+          {app.status}
+        </span>
+      </div>
+
+      <div className="space-y-3 bg-gray-50 p-4 rounded-lg">
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <p className="text-xs text-gray-600 font-semibold">Conversion Unit</p>
+            <p className="text-sm font-semibold text-gray-900 mt-1">{app.conversionUnitLabel}</p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-600 font-semibold">Exchange Rate</p>
+            <p className="text-sm font-semibold text-gray-900 mt-1">${app.rate}</p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-600 font-semibold">Min Withdrawal</p>
+            <p className="text-sm font-semibold text-gray-900 mt-1">{app.minWithdrawal} {app.conversionUnitLabel}</p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-600 font-semibold">Fee</p>
+            <p className="text-sm font-semibold text-gray-900 mt-1">{app.fee}%</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="p-8">
+      {/* Header */}
+      <div className="mb-8">
+        <h2 className="text-3xl font-bold text-gray-900">Applications</h2>
+        <p className="text-gray-600 mt-1">Manage supported applications and their settings</p>
+      </div>
+
+      {/* Error Message */}
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+          <AlertCircle size={20} className="text-red-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="font-semibold text-red-800">Error</p>
+            <p className="text-sm text-red-700">{error}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Apps Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {apps.map(app => (
+          <AppCard key={app.id} app={app} />
+        ))}
+      </div>
+
+      {apps.length === 0 && !loading && (
+        <div className="card-admin text-center py-12">
+          <p className="text-gray-600 font-medium">No applications found</p>
+        </div>
+      )}
+    </div>
+  );
+};

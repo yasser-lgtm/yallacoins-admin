@@ -1,2 +1,210 @@
-import React, { useState } from 'react';
-import { mockCountries } from '../mockData';\nimport { Country, PayoutMethod } from '../types';\nimport { Edit2, Save, X, Plus, Trash2 } from 'lucide-react';\n\nexport const Countries: React.FC = () => {\n  const [countries, setCountries] = useState<Country[]>(mockCountries);\n  const [editingCountryId, setEditingCountryId] = useState<string | null>(null);\n  const [editingMethodId, setEditingMethodId] = useState<string | null>(null);\n  const [editValues, setEditValues] = useState<Partial<Country>>({});\n  const [editMethodValues, setEditMethodValues] = useState<Partial<PayoutMethod>>({});\n  const [expandedCountry, setExpandedCountry] = useState<string | null>(null);\n\n  const handleEditCountry = (country: Country) => {\n    setEditingCountryId(country.id);\n    setEditValues(country);\n  };\n\n  const handleSaveCountry = () => {\n    if (editingCountryId) {\n      setCountries(countries.map(c => c.id === editingCountryId ? { ...c, ...editValues } : c));\n      setEditingCountryId(null);\n      setEditValues({});\n    }\n  };\n\n  const handleEditMethod = (method: PayoutMethod) => {\n    setEditingMethodId(method.id);\n    setEditMethodValues(method);\n  };\n\n  const handleSaveMethod = () => {\n    if (editingMethodId && editingCountryId) {\n      setCountries(countries.map(c => {\n        if (c.id === editingCountryId) {\n          return {\n            ...c,\n            payoutMethods: c.payoutMethods.map(m =>\n              m.id === editingMethodId ? { ...m, ...editMethodValues } : m\n            ),\n          };\n        }\n        return c;\n      }));\n      setEditingMethodId(null);\n      setEditMethodValues({});\n    }\n  };\n\n  const CountryCard = ({ country }: { country: Country }) => {\n    const isEditing = editingCountryId === country.id;\n    const isExpanded = expandedCountry === country.id;\n\n    return (\n      <div className=\"card-admin\">\n        <div className=\"flex items-center justify-between mb-4\">\n          <div className=\"flex-1\">\n            <h3 className=\"text-lg font-bold text-gray-900\">{country.name}</h3>\n            <p className=\"text-sm text-gray-600\">{country.code} • {country.currency}</p>\n          </div>\n          <div className=\"flex items-center gap-2\">\n            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${\n              country.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'\n            }`}>\n              {country.active ? 'Active' : 'Inactive'}\n            </span>\n            {!isEditing && (\n              <button\n                onClick={() => handleEditCountry(country)}\n                className=\"p-2 hover:bg-gray-100 rounded-lg transition-colors\"\n              >\n                <Edit2 size={16} className=\"text-gray-600\" />\n              </button>\n            )}\n          </div>\n        </div>\n\n        {isEditing ? (\n          <div className=\"space-y-4 bg-gray-50 p-4 rounded-lg mb-4\">\n            <div>\n              <label className=\"block text-sm font-semibold text-gray-700 mb-1\">Country Name</label>\n              <input\n                type=\"text\"\n                value={editValues.name || ''}\n                onChange={(e) => setEditValues({ ...editValues, name: e.target.value })}\n                className=\"input-admin\"\n              />\n            </div>\n            <div className=\"grid grid-cols-2 gap-4\">\n              <div>\n                <label className=\"block text-sm font-semibold text-gray-700 mb-1\">Code</label>\n                <input\n                  type=\"text\"\n                  value={editValues.code || ''}\n                  onChange={(e) => setEditValues({ ...editValues, code: e.target.value })}\n                  className=\"input-admin\"\n                />\n              </div>\n              <div>\n                <label className=\"block text-sm font-semibold text-gray-700 mb-1\">Currency</label>\n                <input\n                  type=\"text\"\n                  value={editValues.currency || ''}\n                  onChange={(e) => setEditValues({ ...editValues, currency: e.target.value })}\n                  className=\"input-admin\"\n                />\n              </div>\n            </div>\n            <div>\n              <label className=\"flex items-center gap-2\">\n                <input\n                  type=\"checkbox\"\n                  checked={editValues.active || false}\n                  onChange={(e) => setEditValues({ ...editValues, active: e.target.checked })}\n                  className=\"w-4 h-4\"\n                />\n                <span className=\"text-sm font-semibold text-gray-700\">Active</span>\n              </label>\n            </div>\n            <div className=\"flex gap-2\">\n              <button\n                onClick={handleSaveCountry}\n                className=\"flex-1 btn-admin-primary btn-admin-sm flex items-center justify-center gap-2\"\n              >\n                <Save size={16} />\n                Save\n              </button>\n              <button\n                onClick={() => {\n                  setEditingCountryId(null);\n                  setEditValues({});\n                }}\n                className=\"flex-1 btn-admin-secondary btn-admin-sm flex items-center justify-center gap-2\"\n              >\n                <X size={16} />\n                Cancel\n              </button>\n            </div>\n          </div>\n        ) : null}\n\n        {/* Payout Methods */}\n        <div>\n          <button\n            onClick={() => setExpandedCountry(isExpanded ? null : country.id)}\n            className=\"text-sm font-semibold text-[#012D90] hover:underline mb-3\"\n          >\n            {isExpanded ? '▼' : '▶'} Payout Methods ({country.payoutMethods.length})\n          </button>\n\n          {isExpanded && (\n            <div className=\"space-y-3 bg-gray-50 p-4 rounded-lg\">\n              {country.payoutMethods.map(method => (\n                <div key={method.id} className=\"bg-white p-3 rounded border border-gray-200\">\n                  {editingMethodId === method.id ? (\n                    <div className=\"space-y-3\">\n                      <input\n                        type=\"text\"\n                        value={editMethodValues.name || ''}\n                        onChange={(e) => setEditMethodValues({ ...editMethodValues, name: e.target.value })}\n                        className=\"input-admin text-sm\"\n                      />\n                      <div className=\"grid grid-cols-2 gap-2\">\n                        <div>\n                          <label className=\"block text-xs font-semibold text-gray-700 mb-1\">Fee Value</label>\n                          <input\n                            type=\"number\"\n                            value={editMethodValues.feeValue || 0}\n                            onChange={(e) => setEditMethodValues({ ...editMethodValues, feeValue: parseFloat(e.target.value) })}\n                            className=\"input-admin text-sm\"\n                          />\n                        </div>\n                        <div>\n                          <label className=\"block text-xs font-semibold text-gray-700 mb-1\">ETA</label>\n                          <input\n                            type=\"text\"\n                            value={editMethodValues.etaText || ''}\n                            onChange={(e) => setEditMethodValues({ ...editMethodValues, etaText: e.target.value })}\n                            className=\"input-admin text-sm\"\n                          />\n                        </div>\n                      </div>\n                      <div className=\"flex gap-2\">\n                        <button\n                          onClick={handleSaveMethod}\n                          className=\"flex-1 btn-admin-primary btn-admin-sm text-xs\"\n                        >\n                          Save\n                        </button>\n                        <button\n                          onClick={() => {\n                            setEditingMethodId(null);\n                            setEditMethodValues({});\n                          }}\n                          className=\"flex-1 btn-admin-secondary btn-admin-sm text-xs\"\n                        >\n                          Cancel\n                        </button>\n                      </div>\n                    </div>\n                  ) : (\n                    <div className=\"flex items-center justify-between\">\n                      <div>\n                        <p className=\"font-semibold text-gray-900\">{method.name}</p>\n                        <p className=\"text-xs text-gray-600\">{method.feeValue}% fee • {method.etaText}</p>\n                        {method.recommended && (\n                          <span className=\"inline-block mt-1 px-2 py-0.5 bg-blue-100 text-blue-800 text-xs font-semibold rounded\">Recommended</span>\n                        )}\n                      </div>\n                      <div className=\"flex items-center gap-2\">\n                        <button\n                          onClick={() => handleEditMethod(method)}\n                          className=\"p-1 hover:bg-gray-200 rounded transition-colors\"\n                        >\n                          <Edit2 size={14} className=\"text-gray-600\" />\n                        </button>\n                        <button className=\"p-1 hover:bg-red-100 rounded transition-colors\">\n                          <Trash2 size={14} className=\"text-red-600\" />\n                        </button>\n                      </div>\n                    </div>\n                  )}\n                </div>\n              ))}\n            </div>\n          )}\n        </div>\n      </div>\n    );\n  };\n\n  return (\n    <div className=\"p-8\">\n      {/* Header */}\n      <div className=\"mb-8\">\n        <h2 className=\"text-3xl font-bold text-gray-900\">Countries & Payout Methods</h2>\n        <p className=\"text-gray-600 mt-1\">Manage payment methods and fees by country</p>\n      </div>\n\n      {/* Countries Grid */}\n      <div className=\"grid grid-cols-1 lg:grid-cols-2 gap-6\">\n        {countries.map(country => (\n          <CountryCard key={country.id} country={country} />\n        ))}\n      </div>\n    </div>\n  );\n};\n
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import { Country, PayoutMethod } from '../types';
+import { getCountries, getPayoutMethods, updatePayoutMethod } from '../services/api';
+import { Edit2, Save, X, Trash2, AlertCircle, Loader } from 'lucide-react';
+
+export const Countries: React.FC = () => {
+  const { token } = useAuth();
+  const [countries, setCountries] = useState<Country[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [editingCountryId, setEditingCountryId] = useState<string | null>(null);
+  const [editingMethodId, setEditingMethodId] = useState<string | null>(null);
+  const [editMethodValues, setEditMethodValues] = useState<Partial<PayoutMethod>>({});
+  const [expandedCountry, setExpandedCountry] = useState<string | null>(null);
+  const [savingMethod, setSavingMethod] = useState(false);
+
+  useEffect(() => {
+    if (token) {
+      loadCountries();
+    }
+  }, [token]);
+
+  const loadCountries = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await getCountries(token!);
+      setCountries(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load countries');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEditMethod = (method: PayoutMethod) => {
+    setEditingMethodId(method.id);
+    setEditMethodValues(method);
+  };
+
+  const handleSaveMethod = async () => {
+    if (!editingMethodId || !token) return;
+
+    try {
+      setSavingMethod(true);
+      await updatePayoutMethod(
+        token,
+        editingMethodId,
+        editMethodValues.feeValue || 0,
+        editMethodValues.recommended
+      );
+      
+      // Reload countries to reflect changes
+      await loadCountries();
+      setEditingMethodId(null);
+      setEditMethodValues({});
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save payout method');
+    } finally {
+      setSavingMethod(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="p-8">
+        <div className="flex items-center justify-center py-12">
+          <Loader size={40} className="text-[#012D90] animate-spin" />
+        </div>
+      </div>
+    );
+  }
+
+  const CountryCard = ({ country }: { country: Country }) => {
+    const isExpanded = expandedCountry === country.id;
+
+    return (
+      <div className="card-admin">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex-1">
+            <h3 className="text-lg font-bold text-gray-900">{country.name}</h3>
+            <p className="text-sm text-gray-600">{country.code} • {country.currency}</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+              country.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+            }`}>
+              {country.active ? 'Active' : 'Inactive'}
+            </span>
+          </div>
+        </div>
+
+        {/* Payout Methods */}
+        <div>
+          <button
+            onClick={() => setExpandedCountry(isExpanded ? null : country.id)}
+            className="text-sm font-semibold text-[#012D90] hover:underline mb-3"
+          >
+            {isExpanded ? '▼' : '▶'} Payout Methods ({country.payoutMethods?.length || 0})
+          </button>
+
+          {isExpanded && (
+            <div className="space-y-3 bg-gray-50 p-4 rounded-lg">
+              {country.payoutMethods && country.payoutMethods.length > 0 ? (
+                country.payoutMethods.map(method => (
+                  <div key={method.id} className="bg-white p-3 rounded border border-gray-200">
+                    {editingMethodId === method.id ? (
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-700 mb-1">Fee Value (%)</label>
+                            <input
+                              type="number"
+                              value={editMethodValues.feeValue || 0}
+                              onChange={(e) => setEditMethodValues({ ...editMethodValues, feeValue: parseFloat(e.target.value) })}
+                              className="input-admin text-sm"
+                              step="0.1"
+                            />
+                          </div>
+                          <div>
+                            <label className="flex items-center gap-2 mt-5">
+                              <input
+                                type="checkbox"
+                                checked={editMethodValues.recommended || false}
+                                onChange={(e) => setEditMethodValues({ ...editMethodValues, recommended: e.target.checked })}
+                                className="w-4 h-4"
+                              />
+                              <span className="text-xs font-semibold text-gray-700">Recommended</span>
+                            </label>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={handleSaveMethod}
+                            disabled={savingMethod}
+                            className="flex-1 btn-admin-primary btn-admin-sm text-xs disabled:opacity-50"
+                          >
+                            {savingMethod ? 'Saving...' : 'Save'}
+                          </button>
+                          <button
+                            onClick={() => {
+                              setEditingMethodId(null);
+                              setEditMethodValues({});
+                            }}
+                            className="flex-1 btn-admin-secondary btn-admin-sm text-xs"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-semibold text-gray-900">{method.name}</p>
+                          <p className="text-xs text-gray-600">{method.feeValue}% fee</p>
+                          {method.recommended && (
+                            <span className="inline-block mt-1 px-2 py-0.5 bg-blue-100 text-blue-800 text-xs font-semibold rounded">Recommended</span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleEditMethod(method)}
+                            className="p-1 hover:bg-gray-200 rounded transition-colors"
+                          >
+                            <Edit2 size={14} className="text-gray-600" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-gray-600 text-center py-4">No payout methods available</p>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="p-8">
+      {/* Header */}
+      <div className="mb-8">
+        <h2 className="text-3xl font-bold text-gray-900">Countries & Payout Methods</h2>
+        <p className="text-gray-600 mt-1">Manage payment methods and fees by country</p>
+      </div>
+
+      {/* Error Message */}
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+          <AlertCircle size={20} className="text-red-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="font-semibold text-red-800">Error</p>
+            <p className="text-sm text-red-700">{error}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Countries Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {countries.map(country => (
+          <CountryCard key={country.id} country={country} />
+        ))}
+      </div>
+    </div>
+  );
+};

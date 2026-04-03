@@ -1,24 +1,74 @@
-import React, { useState } from 'react';
-import { mockAppRates } from '../mockData';
+import React, { useEffect, useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import { getAppRates, updateAppRate } from '../services/api';
 import { AppRate } from '../types';
-import { Edit2, Save, X, History } from 'lucide-react';
+import { Edit2, Save, X, Loader, AlertCircle } from 'lucide-react';
 
 export const Rates: React.FC = () => {
-  const [rates, setRates] = useState<AppRate[]>(mockAppRates);
+  const { token } = useAuth();
+  const [rates, setRates] = useState<AppRate[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editValues, setEditValues] = useState<Partial<AppRate>>({});
-  const [showHistory, setShowHistory] = useState<string | null>(null);
+  const [editValues, setEditValues] = useState<Record<string, any>>({});
+  const [saving, setSaving] = useState(false);
+
+  // Fetch rates from backend
+  useEffect(() => {
+    const fetchRates = async () => {
+      if (!token) {
+        setError('Not authenticated');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const data = await getAppRates(token);
+        setRates(data);
+        setError(null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load rates');
+        setRates([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRates();
+  }, [token]);
 
   const handleEdit = (rate: AppRate) => {
     setEditingId(rate.id);
-    setEditValues(rate);
+    setEditValues({
+      rate: rate.rate,
+      fee: rate.fee,
+      minWithdrawal: rate.minWithdrawal,
+      maxWithdrawal: rate.maxWithdrawal,
+      eta: rate.eta,
+    });
   };
 
-  const handleSave = () => {
-    if (editingId) {
-      setRates(rates.map(r => r.id === editingId ? { ...r, ...editValues } : r));
+  const handleSave = async (rateId: string) => {
+    if (!token) return;
+
+    try {
+      setSaving(true);
+      await updateAppRate(rateId, editValues, token);
+      
+      // Update local state
+      setRates(rates.map(r => 
+        r.id === rateId 
+          ? { ...r, ...editValues, version: r.version + 1 }
+          : r
+      ));
+      
       setEditingId(null);
       setEditValues({});
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to update rate');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -27,182 +77,27 @@ export const Rates: React.FC = () => {
     setEditValues({});
   };
 
-  const RateCard = ({ rate }: { rate: AppRate }) => {
-    const isEditing = editingId === rate.id;
-
+  if (loading) {
     return (
-      <div className="card-admin">
-        <div className="flex items-start justify-between mb-4">
-          <div>
-            <h3 className="text-lg font-bold text-gray-900 capitalize">{rate.appName} Live</h3>
-            <p className="text-sm text-gray-600">{rate.conversionLogic}</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-              rate.status === 'active' ? 'bg-green-100 text-green-800' :
-              rate.status === 'limited' ? 'bg-yellow-100 text-yellow-800' :
-              'bg-red-100 text-red-800'
-            }`}>
-              {rate.status}
-            </span>
-            {!isEditing && (
-              <button
-                onClick={() => handleEdit(rate)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <Edit2 size={16} className="text-gray-600" />
-              </button>
-            )}
-          </div>
+      <div className="p-8 flex items-center justify-center h-screen">
+        <div className="text-center">
+          <Loader className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
+          <p className="text-gray-600">Loading rates...</p>
         </div>
-
-        {isEditing ? (
-          <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Public Rate</label>
-                <input
-                  type="number"
-                  step="0.001"
-                  value={editValues.publicRate || 0}
-                  onChange={(e) => setEditValues({ ...editValues, publicRate: parseFloat(e.target.value) })}
-                  className="input-admin"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Internal Rate</label>
-                <input
-                  type="number"
-                  step="0.001"
-                  value={editValues.internalRate || 0}
-                  onChange={(e) => setEditValues({ ...editValues, internalRate: parseFloat(e.target.value) })}
-                  className="input-admin"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Fee Value</label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={editValues.feeValue || 0}
-                  onChange={(e) => setEditValues({ ...editValues, feeValue: parseFloat(e.target.value) })}
-                  className="input-admin"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Minimum Withdrawal</label>
-                <input
-                  type="number"
-                  value={editValues.minimumWithdrawal || 0}
-                  onChange={(e) => setEditValues({ ...editValues, minimumWithdrawal: parseFloat(e.target.value) })}
-                  className="input-admin"
-                />
-              </div>
-              <div className="col-span-2">
-                <label className="block text-sm font-semibold text-gray-700 mb-1">ETA Text</label>
-                <input
-                  type="text"
-                  value={editValues.etaText || ''}
-                  onChange={(e) => setEditValues({ ...editValues, etaText: e.target.value })}
-                  className="input-admin"
-                />
-              </div>
-              <div className="col-span-2">
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Status</label>
-                <select
-                  value={editValues.status || 'active'}
-                  onChange={(e) => setEditValues({ ...editValues, status: e.target.value as any })}
-                  className="select-admin"
-                >
-                  <option value="active">Active</option>
-                  <option value="limited">Limited</option>
-                  <option value="disabled">Disabled</option>
-                </select>
-              </div>
-              <div className="col-span-2">
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Public Note</label>
-                <textarea
-                  value={editValues.publicNote || ''}
-                  onChange={(e) => setEditValues({ ...editValues, publicNote: e.target.value })}
-                  className="textarea-admin h-20"
-                />
-              </div>
-            </div>
-
-            <div className="flex gap-2">
-              <button
-                onClick={handleSave}
-                className="flex-1 btn-admin-primary btn-admin-sm flex items-center justify-center gap-2"
-              >
-                <Save size={16} />
-                Save Changes
-              </button>
-              <button
-                onClick={handleCancel}
-                className="flex-1 btn-admin-secondary btn-admin-sm flex items-center justify-center gap-2"
-              >
-                <X size={16} />
-                Cancel
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-gray-50 p-3 rounded">
-              <p className="text-xs text-gray-600 mb-1">Public Rate</p>
-              <p className="text-lg font-bold text-[#012D90]">${rate.publicRate}</p>
-            </div>
-            <div className="bg-gray-50 p-3 rounded">
-              <p className="text-xs text-gray-600 mb-1">Internal Rate</p>
-              <p className="text-lg font-bold">${rate.internalRate}</p>
-            </div>
-            <div className="bg-gray-50 p-3 rounded">
-              <p className="text-xs text-gray-600 mb-1">Fee</p>
-              <p className="text-lg font-bold">{rate.feeValue}%</p>
-            </div>
-            <div className="bg-gray-50 p-3 rounded">
-              <p className="text-xs text-gray-600 mb-1">Min Withdrawal</p>
-              <p className="text-lg font-bold">{rate.minimumWithdrawal}</p>
-            </div>
-            <div className="col-span-2 bg-gray-50 p-3 rounded">
-              <p className="text-xs text-gray-600 mb-1">ETA</p>
-              <p className="text-sm font-semibold">{rate.etaText}</p>
-            </div>
-          </div>
-        )}
-
-        {/* Version History */}
-        {!isEditing && rate.versionHistory.length > 0 && (
-          <button
-            onClick={() => setShowHistory(showHistory === rate.id ? null : rate.id)}
-            className="mt-4 text-sm text-[#012D90] hover:underline flex items-center gap-1"
-          >
-            <History size={14} />
-            View History ({rate.versionHistory.length})
-          </button>
-        )}
-
-        {showHistory === rate.id && (
-          <div className="mt-4 pt-4 border-t border-gray-200">
-            <h4 className="font-semibold text-gray-900 mb-3">Version History</h4>
-            <div className="space-y-3">
-              {rate.versionHistory.map((version, idx) => (
-                <div key={idx} className="bg-gray-50 p-3 rounded text-sm">
-                  <div className="flex justify-between mb-1">
-                    <span className="font-semibold">Version {version.version}</span>
-                    <span className="text-gray-600">{new Date(version.updatedAt).toLocaleDateString()}</span>
-                  </div>
-                  <p className="text-gray-700">Rate: ${version.rate} | Fee: {version.fee}%</p>
-                  <p className="text-gray-600 text-xs mt-1">By {version.updatedBy}</p>
-                  <p className="text-gray-600 text-xs">Reason: {version.reason}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     );
-  };
+  }
+
+  if (error) {
+    return (
+      <div className="p-8">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-800">
+          <p className="font-semibold">Error loading rates</p>
+          <p className="text-sm mt-1">{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-8">
@@ -221,10 +116,147 @@ export const Rates: React.FC = () => {
 
       {/* Rate Cards Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {rates.map(rate => (
-          <RateCard key={rate.id} rate={rate} />
+        {rates.map((rate) => (
+          <div key={rate.id} className="card-admin">
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">{rate.appName}</h3>
+                <p className="text-sm text-gray-600">v{rate.version}</p>
+              </div>
+              {editingId !== rate.id && (
+                <button
+                  onClick={() => handleEdit(rate)}
+                  className="p-2 hover:bg-gray-100 rounded transition"
+                >
+                  <Edit2 size={18} className="text-gray-600" />
+                </button>
+              )}
+            </div>
+
+            {editingId === rate.id ? (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Conversion Rate
+                  </label>
+                  <input
+                    type="number"
+                    step="0.0001"
+                    value={editValues.rate}
+                    onChange={(e) => setEditValues({ ...editValues, rate: parseFloat(e.target.value) })}
+                    className="input-admin w-full"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Fee (%)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={editValues.fee}
+                    onChange={(e) => setEditValues({ ...editValues, fee: parseFloat(e.target.value) })}
+                    className="input-admin w-full"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Min Withdrawal ($)
+                  </label>
+                  <input
+                    type="number"
+                    step="1"
+                    value={editValues.minWithdrawal}
+                    onChange={(e) => setEditValues({ ...editValues, minWithdrawal: parseFloat(e.target.value) })}
+                    className="input-admin w-full"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Max Withdrawal ($)
+                  </label>
+                  <input
+                    type="number"
+                    step="1"
+                    value={editValues.maxWithdrawal}
+                    onChange={(e) => setEditValues({ ...editValues, maxWithdrawal: parseFloat(e.target.value) })}
+                    className="input-admin w-full"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    ETA
+                  </label>
+                  <input
+                    type="text"
+                    value={editValues.eta}
+                    onChange={(e) => setEditValues({ ...editValues, eta: e.target.value })}
+                    className="input-admin w-full"
+                  />
+                </div>
+
+                <div className="flex gap-2 pt-4">
+                  <button
+                    onClick={() => handleSave(rate.id)}
+                    disabled={saving}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition disabled:opacity-50"
+                  >
+                    <Save size={16} />
+                    Save
+                  </button>
+                  <button
+                    onClick={handleCancel}
+                    disabled={saving}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition disabled:opacity-50"
+                  >
+                    <X size={16} />
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Conversion Rate</span>
+                  <span className="font-semibold text-gray-900">{rate.rate.toFixed(6)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Fee</span>
+                  <span className="font-semibold text-gray-900">{rate.fee}%</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Min Withdrawal</span>
+                  <span className="font-semibold text-gray-900">${rate.minWithdrawal}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Max Withdrawal</span>
+                  <span className="font-semibold text-gray-900">${rate.maxWithdrawal}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">ETA</span>
+                  <span className="font-semibold text-gray-900">{rate.eta}</span>
+                </div>
+                <div className="pt-3 border-t border-gray-200">
+                  <p className="text-xs text-gray-500">
+                    Last updated: {new Date(rate.updatedAt).toLocaleDateString()}
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
         ))}
       </div>
+
+      {rates.length === 0 && (
+        <div className="text-center py-12">
+          <AlertCircle className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+          <p className="text-gray-600">No rates found</p>
+        </div>
+      )}
     </div>
   );
 };

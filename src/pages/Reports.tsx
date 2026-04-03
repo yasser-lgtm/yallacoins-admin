@@ -1,1 +1,252 @@
-import React, { useState } from 'react';\nimport { mockWithdrawalRequests } from '../mockData';\nimport { BarChart3, Download, FileText } from 'lucide-react';\n\nexport const Reports: React.FC = () => {\n  const [selectedReport, setSelectedReport] = useState<string | null>(null);\n  const [exportFormat, setExportFormat] = useState('csv');\n\n  // Calculate report data\n  const totalRequests = mockWithdrawalRequests.length;\n  const approvedRequests = mockWithdrawalRequests.filter(r => r.status === 'approved').length;\n  const rejectedRequests = mockWithdrawalRequests.filter(r => r.status === 'rejected').length;\n  const paidRequests = mockWithdrawalRequests.filter(r => r.status === 'paid').length;\n  const totalPayout = mockWithdrawalRequests\n    .filter(r => r.status === 'paid')\n    .reduce((sum, r) => sum + r.estimatedPayout, 0);\n\n  const requestsByApp = {\n    bigo: mockWithdrawalRequests.filter(r => r.app === 'bigo').length,\n    kiti: mockWithdrawalRequests.filter(r => r.app === 'kiti').length,\n    xena: mockWithdrawalRequests.filter(r => r.app === 'xena').length,\n  };\n\n  const requestsByCountry = {\n    Egypt: mockWithdrawalRequests.filter(r => r.country === 'Egypt').length,\n    UAE: mockWithdrawalRequests.filter(r => r.country === 'UAE').length,\n  };\n\n  const requestsByMethod = {\n    'Vodafone Cash': mockWithdrawalRequests.filter(r => r.payoutMethod === 'Vodafone Cash').length,\n    'InstaPay': mockWithdrawalRequests.filter(r => r.payoutMethod === 'InstaPay').length,\n    'Bank Transfer': mockWithdrawalRequests.filter(r => r.payoutMethod === 'Bank Transfer').length,\n  };\n\n  const handleExport = () => {\n    // Mock export - in production, this would generate actual CSV/Excel/PDF\n    alert(`Exporting as ${exportFormat.toUpperCase()}...`);\n  };\n\n  const ReportCard = ({ title, description, icon: Icon, onClick }: any) => (\n    <button\n      onClick={onClick}\n      className=\"card-admin-hover text-left\"\n    >\n      <div className=\"flex items-start gap-4\">\n        <div className=\"p-3 bg-blue-100 rounded-lg\">\n          <Icon size={24} className=\"text-blue-600\" />\n        </div>\n        <div>\n          <h3 className=\"font-bold text-gray-900\">{title}</h3>\n          <p className=\"text-sm text-gray-600 mt-1\">{description}</p>\n        </div>\n      </div>\n    </button>\n  );\n\n  const StatBox = ({ label, value, trend }: any) => (\n    <div className=\"card-admin\">\n      <p className=\"text-sm text-gray-600 font-medium\">{label}</p>\n      <p className=\"text-3xl font-bold text-gray-900 mt-2\">{value}</p>\n      {trend && (\n        <p className={`text-xs mt-2 ${trend > 0 ? 'text-green-600' : 'text-red-600'}`}>\n          {trend > 0 ? '+' : ''}{trend}% from last month\n        </p>\n      )}\n    </div>\n  );\n\n  return (\n    <div className=\"p-8\">\n      {/* Header */}\n      <div className=\"mb-8\">\n        <h2 className=\"text-3xl font-bold text-gray-900\">Reports & Exports</h2>\n        <p className=\"text-gray-600 mt-1\">Generate and export operational reports</p>\n      </div>\n\n      {/* Export Options */}\n      <div className=\"card-admin mb-8 bg-blue-50 border border-blue-200\">\n        <h3 className=\"font-bold text-gray-900 mb-4\">Export Data</h3>\n        <div className=\"flex items-end gap-4\">\n          <div>\n            <label className=\"block text-sm font-semibold text-gray-700 mb-2\">Format</label>\n            <select\n              value={exportFormat}\n              onChange={(e) => setExportFormat(e.target.value)}\n              className=\"select-admin\"\n            >\n              <option value=\"csv\">CSV</option>\n              <option value=\"excel\">Excel</option>\n              <option value=\"pdf\">PDF</option>\n            </select>\n          </div>\n          <button\n            onClick={handleExport}\n            className=\"btn-admin-primary btn-admin-sm flex items-center gap-2\"\n          >\n            <Download size={16} />\n            Export\n          </button>\n        </div>\n      </div>\n\n      {/* Key Metrics */}\n      <div className=\"mb-8\">\n        <h3 className=\"text-lg font-bold text-gray-900 mb-4\">Key Metrics</h3>\n        <div className=\"admin-grid\">\n          <StatBox label=\"Total Requests\" value={totalRequests} trend={12} />\n          <StatBox label=\"Approved\" value={approvedRequests} trend={8} />\n          <StatBox label=\"Rejected\" value={rejectedRequests} trend={-5} />\n          <StatBox label=\"Paid\" value={paidRequests} trend={15} />\n          <StatBox label=\"Total Payout\" value={`$${totalPayout.toLocaleString()}`} trend={20} />\n          <StatBox label=\"Success Rate\" value={`${Math.round((approvedRequests / totalRequests) * 100)}%`} />\n        </div>\n      </div>\n\n      {/* Available Reports */}\n      <div className=\"mb-8\">\n        <h3 className=\"text-lg font-bold text-gray-900 mb-4\">Available Reports</h3>\n        <div className=\"grid grid-cols-1 md:grid-cols-2 gap-4\">\n          <ReportCard\n            title=\"Daily Requests Report\"\n            description=\"Summary of all requests submitted today\"\n            icon={FileText}\n            onClick={() => setSelectedReport('daily')}\n          />\n          <ReportCard\n            title=\"Approved vs Rejected\"\n            description=\"Comparison of approval and rejection rates\"\n            icon={BarChart3}\n            onClick={() => setSelectedReport('approval')}\n          />\n          <ReportCard\n            title=\"Paid Requests\"\n            description=\"All requests that have been successfully paid\"\n            icon={FileText}\n            onClick={() => setSelectedReport('paid')}\n          />\n          <ReportCard\n            title=\"Requests by App\"\n            description=\"Breakdown of requests by application\"\n            icon={BarChart3}\n            onClick={() => setSelectedReport('app')}\n          />\n          <ReportCard\n            title=\"Requests by Country\"\n            description=\"Geographic distribution of requests\"\n            icon={BarChart3}\n            onClick={() => setSelectedReport('country')}\n          />\n          <ReportCard\n            title=\"Requests by Payout Method\"\n            description=\"Distribution by payment method\"\n            icon={BarChart3}\n            onClick={() => setSelectedReport('method')}\n          />\n        </div>\n      </div>\n\n      {/* Report Details */}\n      {selectedReport && (\n        <div className=\"card-admin\">\n          <div className=\"flex items-center justify-between mb-4\">\n            <h3 className=\"text-lg font-bold text-gray-900\">\n              {selectedReport === 'daily' && 'Daily Requests Report'}\n              {selectedReport === 'approval' && 'Approved vs Rejected'}\n              {selectedReport === 'paid' && 'Paid Requests'}\n              {selectedReport === 'app' && 'Requests by App'}\n              {selectedReport === 'country' && 'Requests by Country'}\n              {selectedReport === 'method' && 'Requests by Payout Method'}\n            </h3>\n            <button\n              onClick={() => setSelectedReport(null)}\n              className=\"text-gray-600 hover:text-gray-900\"\n            >\n              ✕\n            </button>\n          </div>\n\n          {selectedReport === 'app' && (\n            <div className=\"space-y-3\">\n              {Object.entries(requestsByApp).map(([app, count]) => (\n                <div key={app} className=\"flex items-center justify-between\">\n                  <span className=\"font-medium capitalize\">{app}</span>\n                  <div className=\"flex items-center gap-2\">\n                    <div className=\"w-48 h-2 bg-gray-200 rounded-full overflow-hidden\">\n                      <div\n                        className=\"h-full bg-[#012D90]\"\n                        style={{ width: `${(count / 5) * 100}%` }}\n                      ></div>\n                    </div>\n                    <span className=\"font-bold w-12 text-right\">{count}</span>\n                  </div>\n                </div>\n              ))}\n            </div>\n          )}\n\n          {selectedReport === 'country' && (\n            <div className=\"space-y-3\">\n              {Object.entries(requestsByCountry).map(([country, count]) => (\n                <div key={country} className=\"flex items-center justify-between\">\n                  <span className=\"font-medium\">{country}</span>\n                  <div className=\"flex items-center gap-2\">\n                    <div className=\"w-48 h-2 bg-gray-200 rounded-full overflow-hidden\">\n                      <div\n                        className=\"h-full bg-[#F0E68F]\"\n                        style={{ width: `${(count / 5) * 100}%` }}\n                      ></div>\n                    </div>\n                    <span className=\"font-bold w-12 text-right\">{count}</span>\n                  </div>\n                </div>\n              ))}\n            </div>\n          )}\n\n          {selectedReport === 'method' && (\n            <div className=\"space-y-3\">\n              {Object.entries(requestsByMethod).map(([method, count]) => (\n                <div key={method} className=\"flex items-center justify-between\">\n                  <span className=\"font-medium\">{method}</span>\n                  <div className=\"flex items-center gap-2\">\n                    <div className=\"w-48 h-2 bg-gray-200 rounded-full overflow-hidden\">\n                      <div\n                        className=\"h-full bg-green-600\"\n                        style={{ width: `${(count / 5) * 100}%` }}\n                      ></div>\n                    </div>\n                    <span className=\"font-bold w-12 text-right\">{count}</span>\n                  </div>\n                </div>\n              ))}\n            </div>\n          )}\n        </div>\n      )}\n    </div>\n  );\n};\n
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import { getReports } from '../services/api';
+import { BarChart3, Download, FileText, AlertCircle, Loader } from 'lucide-react';
+
+export const Reports: React.FC = () => {
+  const { token } = useAuth();
+  const [reportData, setReportData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedReport, setSelectedReport] = useState<string | null>(null);
+  const [exportFormat, setExportFormat] = useState('csv');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+  const [groupBy, setGroupBy] = useState('day');
+
+  useEffect(() => {
+    if (token) {
+      loadReports();
+    }
+  }, [token]);
+
+  const loadReports = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await getReports(token!, {
+        dateFrom: dateFrom || undefined,
+        dateTo: dateTo || undefined,
+        groupBy: groupBy || undefined,
+      });
+      setReportData(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load reports');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleExport = () => {
+    // In production, this would generate actual CSV/Excel/PDF
+    alert(`Exporting as ${exportFormat.toUpperCase()}...`);
+  };
+
+  const ReportCard = ({ title, description, icon: Icon, onClick }: any) => (
+    <button
+      onClick={onClick}
+      className="card-admin-hover text-left"
+    >
+      <div className="flex items-start gap-4">
+        <div className="p-3 bg-blue-100 rounded-lg">
+          <Icon size={24} className="text-blue-600" />
+        </div>
+        <div>
+          <h3 className="font-bold text-gray-900">{title}</h3>
+          <p className="text-sm text-gray-600 mt-1">{description}</p>
+        </div>
+      </div>
+    </button>
+  );
+
+  const StatBox = ({ label, value, trend }: any) => (
+    <div className="card-admin">
+      <p className="text-sm text-gray-600 font-medium">{label}</p>
+      <p className="text-3xl font-bold text-gray-900 mt-2">{value}</p>
+      {trend && (
+        <p className={`text-xs mt-2 ${trend > 0 ? 'text-green-600' : 'text-red-600'}`}>
+          {trend > 0 ? '+' : ''}{trend}% from last period
+        </p>
+      )}
+    </div>
+  );
+
+  if (loading) {
+    return (
+      <div className="p-8">
+        <div className="flex items-center justify-center py-12">
+          <Loader size={40} className="text-[#012D90] animate-spin" />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-8">
+      {/* Header */}
+      <div className="mb-8">
+        <h2 className="text-3xl font-bold text-gray-900">Reports & Exports</h2>
+        <p className="text-gray-600 mt-1">Generate and export operational reports</p>
+      </div>
+
+      {/* Error Message */}
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+          <AlertCircle size={20} className="text-red-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="font-semibold text-red-800">Error</p>
+            <p className="text-sm text-red-700">{error}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Filter Options */}
+      <div className="card-admin mb-8 bg-blue-50 border border-blue-200">
+        <h3 className="font-bold text-gray-900 mb-4">Report Filters</h3>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">From Date</label>
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              className="input-admin"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">To Date</label>
+            <input
+              type="date"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+              className="input-admin"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Group By</label>
+            <select
+              value={groupBy}
+              onChange={(e) => setGroupBy(e.target.value)}
+              className="select-admin"
+            >
+              <option value="day">Day</option>
+              <option value="week">Week</option>
+              <option value="month">Month</option>
+            </select>
+          </div>
+          <div className="flex items-end">
+            <button
+              onClick={loadReports}
+              className="btn-admin-primary btn-admin-sm w-full"
+            >
+              Generate Report
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Export Options */}
+      <div className="card-admin mb-8 bg-green-50 border border-green-200">
+        <h3 className="font-bold text-gray-900 mb-4">Export Data</h3>
+        <div className="flex items-end gap-4">
+          <div className="flex-1">
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Format</label>
+            <select
+              value={exportFormat}
+              onChange={(e) => setExportFormat(e.target.value)}
+              className="select-admin"
+            >
+              <option value="csv">CSV</option>
+              <option value="excel">Excel</option>
+              <option value="pdf">PDF</option>
+            </select>
+          </div>
+          <button
+            onClick={handleExport}
+            className="btn-admin-primary btn-admin-sm flex items-center gap-2"
+          >
+            <Download size={16} />
+            Export
+          </button>
+        </div>
+      </div>
+
+      {/* Report Statistics */}
+      {reportData && (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <StatBox
+              label="Total Requests"
+              value={reportData.totalRequests || 0}
+              trend={5}
+            />
+            <StatBox
+              label="Total Payout Value"
+              value={`$${(reportData.totalPayoutValue || 0).toLocaleString()}`}
+              trend={8}
+            />
+            <StatBox
+              label="Average Payout Time"
+              value={`${Math.round(reportData.averagePayoutTime || 0)} hrs`}
+              trend={-2}
+            />
+            <StatBox
+              label="Period"
+              value={reportData.period || 'Current'}
+            />
+          </div>
+
+          {/* Detailed Report Data */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Requests by Status */}
+            <div className="card-admin">
+              <h3 className="font-bold text-gray-900 mb-4">Requests by Status</h3>
+              <div className="space-y-3">
+                {reportData.requestsByStatus && Object.entries(reportData.requestsByStatus).map(([status, count]: any) => (
+                  <div key={status} className="flex items-center justify-between">
+                    <span className="text-gray-700 capitalize">{status.replace('_', ' ')}</span>
+                    <span className="font-bold text-gray-900">{count}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Requests by App */}
+            <div className="card-admin">
+              <h3 className="font-bold text-gray-900 mb-4">Requests by App</h3>
+              <div className="space-y-3">
+                {reportData.requestsByApp && Object.entries(reportData.requestsByApp).map(([app, count]: any) => (
+                  <div key={app} className="flex items-center justify-between">
+                    <span className="text-gray-700 capitalize">{app}</span>
+                    <span className="font-bold text-gray-900">{count}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Requests by Country */}
+            <div className="card-admin">
+              <h3 className="font-bold text-gray-900 mb-4">Requests by Country</h3>
+              <div className="space-y-3">
+                {reportData.requestsByCountry && Object.entries(reportData.requestsByCountry).map(([country, count]: any) => (
+                  <div key={country} className="flex items-center justify-between">
+                    <span className="text-gray-700">{country}</span>
+                    <span className="font-bold text-gray-900">{count}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {!reportData && !loading && (
+        <div className="card-admin text-center py-12">
+          <BarChart3 size={48} className="mx-auto text-gray-400 mb-4" />
+          <p className="text-gray-600 font-medium">No report data available</p>
+          <p className="text-sm text-gray-500 mt-1">Generate a report using the filters above</p>
+        </div>
+      )}
+    </div>
+  );
+};

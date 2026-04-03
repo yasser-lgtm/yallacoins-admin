@@ -1,6 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 /* YallaCoins Admin Portal Design System */
 
@@ -18,11 +16,7 @@
   }
 
   body {
-    @apply bg-gray-50 text-gray-900 font-poppins;
-  }
-
-  html[dir="rtl"] body {
-    @apply font-cairo;
+    @apply bg-gray-50 text-gray-900;
   }
 }
 
@@ -50,138 +44,85 @@
 
   /* Admin Cards */
   .card-admin {
-    @apply bg-white rounded-lg shadow-sm border border-gray-200 p-6;
+    @apply bg-white rounded-lg border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow duration-200;
   }
 
   .card-admin-hover {
-    @apply card-admin hover:shadow-md transition-shadow duration-200 cursor-pointer;
+    @apply bg-white rounded-lg border border-gray-200 p-6 shadow-sm hover:shadow-lg hover:border-blue-300 transition-all duration-200 cursor-pointer;
   }
 
-  /* Admin Tables */
-  .table-admin {
-    @apply w-full border-collapse;
-  }
-
-  .table-admin thead {
-    @apply bg-gray-100 border-b border-gray-300;
-  }
-
-  .table-admin th {
-    @apply px-4 py-3 text-left text-sm font-semibold text-gray-700;
-  }
-
-  .table-admin td {
-    @apply px-4 py-3 text-sm text-gray-900 border-b border-gray-200;
-  }
-
-  .table-admin tbody tr:hover {
-    @apply bg-gray-50;
-  }
-
-  /* Status Badges */
-  .badge-status {
-    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold;
-  }
-
-  .badge-submitted {
-    @apply badge-status bg-blue-100 text-blue-800;
-  }
-
-  .badge-under-review {
-    @apply badge-status bg-yellow-100 text-yellow-800;
-  }
-
-  .badge-approved {
-    @apply badge-status bg-green-100 text-green-800;
-  }
-
-  .badge-needs-correction {
-    @apply badge-status bg-orange-100 text-orange-800;
-  }
-
-  .badge-paid {
-    @apply badge-status bg-emerald-100 text-emerald-800;
-  }
-
-  .badge-rejected {
-    @apply badge-status bg-red-100 text-red-800;
-  }
-
-  /* Input Fields */
+  /* Admin Form Elements */
   .input-admin {
-    @apply w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#012D90] focus:border-transparent;
+    @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200;
   }
 
   .select-admin {
-    @apply input-admin appearance-none bg-white cursor-pointer;
+    @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white;
   }
 
   .textarea-admin {
-    @apply input-admin resize-none;
+    @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none;
   }
 
-  /* Layout */
-  .admin-container {
-    @apply max-w-7xl mx-auto px-4 py-8;
-  }
-
+  /* Admin Grid */
   .admin-grid {
     @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6;
   }
 
-  .admin-grid-2 {
-    @apply grid grid-cols-1 md:grid-cols-2 gap-6;
+  /* Admin Table */
+  .table-admin {
+    @apply w-full border-collapse;
+  }
+
+  .table-admin thead tr {
+    @apply bg-gray-100 border-b border-gray-300;
+  }
+
+  .table-admin thead th {
+    @apply px-4 py-3 text-left text-sm font-semibold text-gray-900;
+  }
+
+  .table-admin tbody tr {
+    @apply border-b border-gray-200 hover:bg-gray-50 transition-colors;
+  }
+
+  .table-admin tbody td {
+    @apply px-4 py-3 text-sm text-gray-700;
   }
 
   /* Sidebar */
-  .sidebar-admin {
-    @apply fixed left-0 top-0 h-screen w-64 bg-[#012D90] text-white overflow-y-auto;
+  .sidebar {
+    @apply w-64 bg-gradient-to-b from-[#012D90] to-[#0A1432] text-white min-h-screen fixed left-0 top-0 overflow-y-auto;
   }
 
   .sidebar-item {
-    @apply px-6 py-3 hover:bg-[#0A1F5C] transition-colors duration-200 cursor-pointer;
+    @apply px-4 py-3 hover:bg-[#0A1F5C] transition-colors duration-200 cursor-pointer flex items-center gap-3 text-sm;
   }
 
-  .sidebar-item-active {
-    @apply sidebar-item bg-[#0A1F5C] border-l-4 border-[#F0E68F];
+  .sidebar-item.active {
+    @apply bg-[#F0E68F] text-[#012D90] font-semibold;
   }
 
-  /* Main Content */
-  .admin-main {
-    @apply ml-64 min-h-screen bg-gray-50;
+  /* Status Badges */
+  .badge-success {
+    @apply px-3 py-1 rounded-full bg-green-100 text-green-800 text-xs font-semibold;
   }
 
-  /* Topbar */
-  .topbar-admin {
-    @apply bg-white border-b border-gray-200 px-8 py-4 flex items-center justify-between;
+  .badge-warning {
+    @apply px-3 py-1 rounded-full bg-yellow-100 text-yellow-800 text-xs font-semibold;
   }
 
-  /* KPI Cards */
-  .kpi-card {
-    @apply card-admin;
+  .badge-error {
+    @apply px-3 py-1 rounded-full bg-red-100 text-red-800 text-xs font-semibold;
   }
 
-  .kpi-value {
-    @apply text-3xl font-bold text-[#012D90] mt-2;
+  .badge-info {
+    @apply px-3 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-semibold;
   }
+}
 
-  .kpi-label {
-    @apply text-sm text-gray-600 mt-1;
-  }
-
-  .kpi-change {
-    @apply text-xs mt-2;
-  }
-
-  .kpi-change-positive {
-    @apply kpi-change text-green-600;
-  }
-
-  .kpi-change-negative {
-    @apply kpi-change text-red-600;
-  }
-
-  /* Animations */
+/* Animations */
+@layer utilities {
   @keyframes fadeIn {
     from {
       opacity: 0;
@@ -191,44 +132,22 @@
     }
   }
 
-  @keyframes slideInRight {
+  @keyframes slideIn {
     from {
-      transform: translateX(20px);
+      transform: translateY(10px);
       opacity: 0;
     }
     to {
-      transform: translateX(0);
+      transform: translateY(0);
       opacity: 1;
     }
   }
 
-  .animate-fade-in {
+  .animate-fadeIn {
     animation: fadeIn 0.3s ease-in-out;
   }
 
-  .animate-slide-in-right {
-    animation: slideInRight 0.3s ease-in-out;
+  .animate-slideIn {
+    animation: slideIn 0.3s ease-in-out;
   }
-}
-
-/* RTL Support */
-html[dir="rtl"] {
-  direction: rtl;
-  text-align: right;
-}
-
-html[dir="rtl"] .sidebar-item-active {
-  @apply border-l-0 border-r-4;
-}
-
-html[dir="rtl"] .admin-main {
-  @apply ml-0 mr-64;
-}
-
-html[dir="rtl"] .table-admin th {
-  @apply text-right;
-}
-
-html[dir="rtl"] .table-admin td {
-  @apply text-right;
 }

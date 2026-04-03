@@ -9,7 +9,7 @@ import {
   AppWindow,
   FileText,
   Users,
-  LogBook,
+  BookOpen,
   BarChart3,
   Settings,
   LogOut,
@@ -30,7 +30,7 @@ const navItems: NavItem[] = [
   { label: 'Apps', path: '/apps', icon: <AppWindow size={20} />, roles: ['super_admin', 'rate_manager'] },
   { label: 'Content', path: '/content', icon: <FileText size={20} />, roles: ['super_admin'] },
   { label: 'Users & Roles', path: '/users', icon: <Users size={20} />, roles: ['super_admin'] },
-  { label: 'Audit Log', path: '/audit', icon: <LogBook size={20} />, roles: ['super_admin', 'auditor'] },
+  { label: 'Audit Log', path: '/audit', icon: <BookOpen size={20} />, roles: ['super_admin', 'auditor'] },
   { label: 'Reports', path: '/reports', icon: <BarChart3 size={20} />, roles: ['super_admin', 'operations_admin', 'finance_admin', 'auditor'] },
   { label: 'Settings', path: '/settings', icon: <Settings size={20} />, roles: ['super_admin'] },
 ];
