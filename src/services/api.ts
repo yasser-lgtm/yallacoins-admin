@@ -1,7 +1,20 @@
 // YallaCoins Admin API Service Layer
 // Handles all communication with the backend API for admin operations
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+// PRODUCTION REQUIREMENT: VITE_API_URL MUST be set in environment
+// NO FALLBACK TO LOCALHOST - This ensures production deployments fail fast if misconfigured
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+
+if (!API_BASE_URL) {
+  console.error(
+    "❌ FATAL: VITE_API_URL environment variable is not set. " +
+    "The admin portal cannot function without a valid API URL. " +
+    "Please ensure VITE_API_URL is configured in your deployment environment."
+  );
+  throw new Error(
+    "VITE_API_URL environment variable is required for admin portal to function"
+  );
+}
 
 // ============================================================================
 // AUTH ENDPOINTS
